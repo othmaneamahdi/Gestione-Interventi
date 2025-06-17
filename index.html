@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="it" data-bs-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Gestione Interventi - Sistema Avanzato</title>
+  
+  <!-- Bootstrap CSS with light theme -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <link href="styles.css" rel="stylesheet">
+  
+  <!-- External Libraries -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</head>
+<body class="bg-light">
+  <div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+      <div class="col-12">
+        <div class="card border-0 shadow-sm">
+          <div class="card-body text-center py-4">
+            <h1 class="display-4 text-primary mb-2">
+              <i class="fas fa-tools me-3"></i>Gestione Interventi
+            </h1>
+            <p class="lead text-muted">Sistema di gestione interventi di manutenzione</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="row mb-4">
+      <div class="col-12">
+        <ul class="nav nav-pills nav-fill" id="mainTabs" role="tablist">
+          <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="nuovo-tab" data-bs-toggle="pill" data-bs-target="#nuovo" type="button" role="tab">
+              <i class="fas fa-plus me-2"></i>Nuovo Intervento
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="lista-tab" data-bs-toggle="pill" data-bs-target="#lista" type="button" role="tab">
+              <i class="fas fa-list me-2"></i>Lista Interventi
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="gestione-tab" data-bs-toggle="pill" data-bs-target="#gestione" type="button" role="tab">
+              <i class="fas fa-cog me-2"></i>Gestione
+            </button>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Tab Content -->
+    <div class="tab-content" id="mainTabContent">
+      <!-- Nuovo Intervento Tab -->
+      <div class="tab-pane fade show active" id="nuovo" role="tabpanel">
+        <div class="row justify-content-center">
+          <div class="col-lg-8">
+            <div class="card shadow-sm">
+              <div class="card-header">
+                <h4 class="card-title mb-0">
+                  <i class="fas fa-plus-circle me-2 text-success"></i>
+                  <span id="formTitle">Nuovo Intervento</span>
+                </h4>
+              </div>
+              <div class="card-body">
+                <!-- Loading Spinner -->
+                <div id="loadingSpinner" class="text-center d-none">
+                  <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Caricamento...</span>
+                  </div>
+                </div>
+
+                <!-- Alert Container -->
+                <div id="alertContainer"></div>
+
+                <form id="interventoForm" class="needs-validation" novalidate>
+                  <input type="hidden" id="editIndex" />
+                  
+                  <div class="row g-3">
+                    <!-- Asset -->
+                    <div class="col-md-6">
+                      <label for="asset" class="form-label">
+                        <i class="fas fa-desktop me-1"></i>Asset *
+                      </label>
+                      <input type="text" class="form-control" id="asset" required>
+                      <div class="invalid-feedback">
+                        Inserire il nome dell'asset
+                      </div>
+                    </div>
+
+                    <!-- Serial Number -->
+                    <div class="col-md-6">
+                      <label for="serial" class="form-label">
+                        <i class="fas fa-barcode me-1"></i>Serial Number *
+                      </label>
+                      <input type="text" class="form-control" id="serial" required>
+                      <div class="invalid-feedback">
+                        Inserire il numero seriale
+                      </div>
+                    </div>
+
+                    <!-- Problematica -->
+                    <div class="col-12">
+                      <label for="descrizione" class="form-label">
+                        <i class="fas fa-exclamation-triangle me-1"></i>Problematica *
+                      </label>
+                      <textarea class="form-control" id="descrizione" rows="3" required 
+                                placeholder="Descrivi la problematica riscontrata..."></textarea>
+                      <div class="invalid-feedback">
+                        Inserire la descrizione della problematica
+                      </div>
+                    </div>
+
+                    <!-- Intervento -->
+                    <div class="col-12">
+                      <label for="intervento" class="form-label">
+                        <i class="fas fa-wrench me-1"></i>Intervento Effettuato *
+                      </label>
+                      <textarea class="form-control" id="intervento" rows="3" required 
+                                placeholder="Descrivi l'intervento effettuato..."></textarea>
+                      <div class="invalid-feedback">
+                        Inserire la descrizione dell'intervento
+                      </div>
+                    </div>
+
+                    <!-- Tecnico -->
+                    <div class="col-md-6">
+                      <label for="tecnico" class="form-label">
+                        <i class="fas fa-user-cog me-1"></i>Tecnico *
+                      </label>
+                      <select class="form-select" id="tecnico" required>
+                        <option value="">-- Seleziona Tecnico --</option>
+                      </select>
+                      <div class="invalid-feedback">
+                        Selezionare un tecnico
+                      </div>
+                      
+                      <!-- Gestione Tecnici -->
+                      <div class="mt-2">
+                        <div class="input-group input-group-sm">
+                          <input type="text" class="form-control" id="nuovoTecnico" 
+                                 placeholder="Aggiungi nuovo tecnico">
+                          <button type="button" class="btn btn-outline-success" onclick="app.aggiungiTecnico()">
+                            <i class="fas fa-plus"></i>
+                          </button>
+                          <button type="button" class="btn btn-outline-danger" onclick="app.rimuoviTecnico()">
+                            <i class="fas fa-minus"></i>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Data e Ora -->
+                    <div class="col-md-6">
+                      <label for="dataOra" class="form-label">
+                        <i class="fas fa-calendar-alt me-1"></i>Data e Ora *
+                      </label>
+                      <input type="datetime-local" class="form-control" id="dataOra" required>
+                      <div class="invalid-feedback">
+                        Inserire data e ora dell'intervento
+                      </div>
+                    </div>
+
+                    <!-- Stato -->
+                    <div class="col-md-6">
+                      <label for="stato" class="form-label">
+                        <i class="fas fa-flag me-1"></i>Stato *
+                      </label>
+                      <select class="form-select" id="stato" required>
+                        <option value="">-- Seleziona Stato --</option>
+                        <option value="InProgress">In Progress</option>
+                        <option value="Closed">Closed</option>
+                      </select>
+                      <div class="invalid-feedback">
+                        Selezionare lo stato dell'intervento
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Form Actions -->
+                  <div class="row mt-4">
+                    <div class="col-12">
+                      <div class="d-flex flex-wrap gap-2 justify-content-end">
+                        <button type="submit" class="btn btn-primary">
+                          <i class="fas fa-save me-2"></i>Salva Intervento
+                        </button>
+                        <button type="button" class="btn btn-secondary" onclick="app.resetForm()">
+                          <i class="fas fa-undo me-2"></i>Pulisci Form
+                        </button>
+                        <button type="button" class="btn btn-warning" onclick="app.ripristinaEliminato()">
+                          <i class="fas fa-trash-restore me-2"></i>Ripristina Ultimo
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Lista Interventi Tab -->
+      <div class="tab-pane fade" id="lista" role="tabpanel">
+        <div class="card shadow-sm">
+          <div class="card-header">
+            <div class="d-flex justify-content-between align-items-center">
+              <h4 class="card-title mb-0">
+                <i class="fas fa-list me-2 text-info"></i>Lista Interventi
+              </h4>
+              <span class="badge bg-primary" id="contatoreTotale">0 interventi</span>
+            </div>
+          </div>
+          <div class="card-body">
+            <!-- Filtri -->
+            <div class="row g-3 mb-4">
+              <div class="col-md-3">
+                <label for="filtroInizio" class="form-label">Data Inizio</label>
+                <input type="date" class="form-control" id="filtroInizio">
+              </div>
+              <div class="col-md-3">
+                <label for="filtroFine" class="form-label">Data Fine</label>
+                <input type="date" class="form-control" id="filtroFine">
+              </div>
+              <div class="col-md-3">
+                <label for="filtroTecnico" class="form-label">Tecnico</label>
+                <input type="text" class="form-control" id="filtroTecnico" placeholder="Nome tecnico">
+              </div>
+              <div class="col-md-3">
+                <label for="search" class="form-label">Ricerca</label>
+                <input type="text" class="form-control" id="search" placeholder="Asset, Serial, Problema...">
+              </div>
+              <div class="col-12">
+                <div class="d-flex flex-wrap gap-2">
+                  <button class="btn btn-primary" onclick="app.applicaFiltri()">
+                    <i class="fas fa-filter me-2"></i>Applica Filtri
+                  </button>
+                  <button class="btn btn-secondary" onclick="app.resetFiltri()">
+                    <i class="fas fa-times me-2"></i>Reset Filtri
+                  </button>
+                  <div class="ms-auto d-flex gap-2">
+                    <button class="btn btn-success" onclick="app.esportaExcel()">
+                      <i class="fas fa-file-excel me-2"></i>Excel
+                    </button>
+                    <button class="btn btn-danger" onclick="app.esportaPDF()">
+                      <i class="fas fa-file-pdf me-2"></i>PDF
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div class="col-12">
+                <span class="text-muted" id="contatoreVisibili">Mostrando 0 di 0 interventi</span>
+              </div>
+            </div>
+
+            <!-- Tabella -->
+            <div class="table-responsive">
+              <table class="table table-hover">
+                <thead class="table-light">
+                  <tr>
+                    <th>
+                      <button class="btn btn-link text-dark p-0" onclick="app.ordinaTabella('dataOra')">
+                        Data e Ora <i class="fas fa-sort"></i>
+                      </button>
+                    </th>
+                    <th>Asset</th>
+                    <th>Serial</th>
+                    <th>Problematica</th>
+                    <th>Intervento</th>
+                    <th>Tecnico</th>
+                    <th>Stato</th>
+                    <th>Azioni</th>
+                  </tr>
+                </thead>
+                <tbody id="tabellaInterventi">
+                  <!-- Righe generate dinamicamente -->
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Paginazione -->
+            <div class="row mt-4">
+              <div class="col-md-6">
+                <div class="d-flex align-items-center">
+                  <label for="elementiPerPagina" class="form-label me-2 mb-0">Elementi per pagina:</label>
+                  <select class="form-select form-select-sm" id="elementiPerPagina" style="width: auto;" onchange="app.cambiaElementiPerPagina(this.value)">
+                    <option value="10">10</option>
+                    <option value="25" selected>25</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                  </select>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <nav aria-label="Paginazione interventi">
+                  <ul class="pagination pagination-sm justify-content-end" id="pagination">
+                    <!-- Paginazione generata dinamicamente -->
+                  </ul>
+                </nav>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Gestione Tab -->
+      <div class="tab-pane fade" id="gestione" role="tabpanel">
+        <div class="row">
+          <!-- Statistiche -->
+          <div class="col-md-4 mb-4">
+            <div class="card shadow-sm">
+              <div class="card-header">
+                <h5 class="card-title mb-0">
+                  <i class="fas fa-chart-bar me-2 text-primary"></i>Statistiche
+                </h5>
+              </div>
+              <div class="card-body">
+                <div class="row text-center">
+                  <div class="col-6">
+                    <div class="border-end">
+                      <h3 class="text-primary mb-1" id="statTotali">0</h3>
+                      <small class="text-muted">Totali</small>
+                    </div>
+                  </div>
+                  <div class="col-6">
+                    <h3 class="text-warning mb-1" id="statInProgress">0</h3>
+                    <small class="text-muted">In Progress</small>
+                  </div>
+                </div>
+                <hr>
+                <div class="row text-center">
+                  <div class="col-6">
+                    <div class="border-end">
+                      <h3 class="text-success mb-1" id="statClosed">0</h3>
+                      <small class="text-muted">Closed</small>
+                    </div>
+                  </div>
+                  <div class="col-6">
+                    <h3 class="text-info mb-1" id="statTecnici">0</h3>
+                    <small class="text-muted">Tecnici</small>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Gestione Tecnici -->
+          <div class="col-md-8 mb-4">
+            <div class="card shadow-sm">
+              <div class="card-header">
+                <h5 class="card-title mb-0">
+                  <i class="fas fa-users-cog me-2 text-success"></i>Gestione Tecnici
+                </h5>
+              </div>
+              <div class="card-body">
+                <div class="mb-3">
+                  <label for="nuovoTecnicoGestione" class="form-label">Aggiungi Nuovo Tecnico</label>
+                  <div class="input-group">
+                    <input type="text" class="form-control" id="nuovoTecnicoGestione" 
+                           placeholder="Nome e cognome del tecnico">
+                    <button type="button" class="btn btn-success" onclick="app.aggiungiTecnicoGestione()">
+                      <i class="fas fa-plus me-1"></i>Aggiungi
+                    </button>
+                  </div>
+                </div>
+                
+                <div class="mb-3">
+                  <label class="form-label">Tecnici Registrati</label>
+                  <div class="border rounded p-3 bg-light" id="listaTecnici">
+                    <!-- Tecnici caricati dinamicamente -->
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Azioni di Sistema -->
+          <div class="col-md-12 mb-4">
+            <div class="card shadow-sm">
+              <div class="card-header">
+                <h5 class="card-title mb-0">
+                  <i class="fas fa-cogs me-2 text-danger"></i>Azioni di Sistema
+                </h5>
+              </div>
+              <div class="card-body">
+                <div class="alert alert-warning">
+                  <i class="fas fa-exclamation-triangle me-2"></i>
+                  <strong>Attenzione:</strong> Queste azioni sono irreversibili. Assicurati di aver fatto un backup dei dati prima di procedere.
+                </div>
+                
+                <div class="d-flex flex-wrap gap-2">
+                  <button type="button" class="btn btn-success" onclick="app.esportaDati()">
+                    <i class="fas fa-download me-2"></i>Esporta Dati
+                  </button>
+                  <button type="button" class="btn btn-primary" onclick="document.getElementById('importFile').click()">
+                    <i class="fas fa-upload me-2"></i>Importa Dati
+                  </button>
+                  <button type="button" class="btn btn-danger" onclick="app.eliminaTuttiDati()">
+                    <i class="fas fa-trash me-2"></i>Elimina Tutti i Dati
+                  </button>
+                </div>
+                
+                <input type="file" id="importFile" accept=".json" style="display: none;" onchange="app.importaDati(this.files[0])">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3" id="toastContainer">
+      <!-- Toast generati dinamicamente -->
+    </div>
+  </div>
+
+  <!-- Modal Modifica Intervento -->
+  <div class="modal fade" id="modalModifica" tabindex="-1" aria-labelledby="modalModificaLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="modalModificaLabel">
+            <i class="fas fa-edit me-2"></i>Modifica Intervento
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="formModifica" class="needs-validation" novalidate>
+            <input type="hidden" id="editIndexModal" />
+            
+            <div class="row g-3">
+              <!-- Asset Modal -->
+              <div class="col-md-6">
+                <label for="assetModal" class="form-label">
+                  <i class="fas fa-desktop me-1"></i>Asset *
+                </label>
+                <input type="text" class="form-control" id="assetModal" required>
+                <div class="invalid-feedback">
+                  Inserire il nome dell'asset
+                </div>
+              </div>
+
+              <!-- Serial Number Modal -->
+              <div class="col-md-6">
+                <label for="serialModal" class="form-label">
+                  <i class="fas fa-barcode me-1"></i>Serial Number *
+                </label>
+                <input type="text" class="form-control" id="serialModal" required>
+                <div class="invalid-feedback">
+                  Inserire il numero seriale
+                </div>
+              </div>
+
+              <!-- Problematica Modal -->
+              <div class="col-12">
+                <label for="descrizioneModal" class="form-label">
+                  <i class="fas fa-exclamation-triangle me-1"></i>Problematica *
+                </label>
+                <textarea class="form-control" id="descrizioneModal" rows="3" required></textarea>
+                <div class="invalid-feedback">
+                  Inserire la descrizione della problematica
+                </div>
+              </div>
+
+              <!-- Intervento Modal -->
+              <div class="col-12">
+                <label for="interventoModal" class="form-label">
+                  <i class="fas fa-wrench me-1"></i>Intervento Effettuato *
+                </label>
+                <textarea class="form-control" id="interventoModal" rows="3" required></textarea>
+                <div class="invalid-feedback">
+                  Inserire la descrizione dell'intervento
+                </div>
+              </div>
+
+              <!-- Tecnico Modal -->
+              <div class="col-md-6">
+                <label for="tecnicoModal" class="form-label">
+                  <i class="fas fa-user-cog me-1"></i>Tecnico *
+                </label>
+                <select class="form-select" id="tecnicoModal" required>
+                  <option value="">-- Seleziona Tecnico --</option>
+                </select>
+                <div class="invalid-feedback">
+                  Selezionare un tecnico
+                </div>
+                
+                <!-- Gestione Tecnici Modal -->
+                <div class="mt-2">
+                  <div class="input-group input-group-sm">
+                    <input type="text" class="form-control" id="nuovoTecnicoModal" 
+                           placeholder="Aggiungi nuovo tecnico">
+                    <button type="button" class="btn btn-outline-success" onclick="app.aggiungiTecnicoModal()">
+                      <i class="fas fa-plus"></i>
+                    </button>
+                    <button type="button" class="btn btn-outline-danger" onclick="app.rimuoviTecnicoModal()">
+                      <i class="fas fa-minus"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Data e Ora Modal -->
+              <div class="col-md-6">
+                <label for="dataOraModal" class="form-label">
+                  <i class="fas fa-calendar-alt me-1"></i>Data e Ora *
+                </label>
+                <input type="datetime-local" class="form-control" id="dataOraModal" required>
+                <div class="invalid-feedback">
+                  Inserire data e ora dell'intervento
+                </div>
+              </div>
+
+              <!-- Stato Modal -->
+              <div class="col-md-6">
+                <label for="statoModal" class="form-label">
+                  <i class="fas fa-flag me-1"></i>Stato *
+                </label>
+                <select class="form-select" id="statoModal" required>
+                  <option value="">-- Seleziona Stato --</option>
+                  <option value="InProgress">In Progress</option>
+                  <option value="Closed">Closed</option>
+                </select>
+                <div class="invalid-feedback">
+                  Selezionare lo stato dell'intervento
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+            <i class="fas fa-times me-2"></i>Annulla
+          </button>
+          <button type="submit" form="formModifica" class="btn btn-primary">
+            <i class="fas fa-save me-2"></i>Salva Modifiche
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Conferma Eliminazione -->
+  <div class="modal fade" id="modalConfermaElimina" tabindex="-1" aria-labelledby="modalConfermaEliminaLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="modalConfermaEliminaLabel">
+            <i class="fas fa-exclamation-triangle me-2 text-warning"></i>Conferma Eliminazione
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p>Sei sicuro di voler eliminare questo intervento?</p>
+          <p class="text-muted">Questa azione non può essere annullata.</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+            <i class="fas fa-times me-2"></i>Annulla
+          </button>
+          <button type="button" class="btn btn-danger" id="confermaEliminaBtn">
+            <i class="fas fa-trash me-2"></i>Elimina
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Storico Modifiche -->
+  <div class="modal fade" id="modalStorico" tabindex="-1" aria-labelledby="modalStoricoLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="modalStoricoLabel">
+            <i class="fas fa-history me-2 text-info"></i>Storico Modifiche
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div id="storicoContent">
+            <!-- Contenuto caricato dinamicamente -->
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+            <i class="fas fa-times me-2"></i>Chiudi
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
